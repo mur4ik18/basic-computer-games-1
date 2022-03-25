@@ -1,72 +1,131 @@
-use rand::seq::SliceRandom;
-use rand::Rng;
-use rustyline::error::ReadlineError;
-use rustyline::Editor;
-use std::process;
+use std::io;
+use std::io::{stdin, stdout, Write};
 
-struct Nums(u8, u8, u8);
+use rand::prelude::SliceRandom;
 
-impl Nums {
-    fn new() -> Nums {
-        let mut rng = rand::thread_rng();
-        let mut numbers: [u8; 10] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-        numbers.shuffle(&mut rng);
-        println!("O.K.  I have a number in mind");
-        Nums(numbers[0], numbers[1], numbers[2])
-        
+type Digits = [u8; 3];
+
+fn main() -> io::Result<()> {
+    print_header();
+    if !read_lowercase_input()?.starts_with('n') {
+        print_rules();
     }
-}
-
-fn main() {
-    let max_guesses: u8 = 20;
-    // function for printing rooles
-    rooles();
-    let nums = Nums::new();
-    println!("{}", nums[0]);
-
-}
-
-fn rooles() {
-    let mut rl = Editor::<()>::new();
-    let rool: bool;
+    let mut win_count = 0;
     loop {
-        let readline = rl.readline("Would you like the rules (Yes or No)? ");
-        match readline {
-           Ok(line) => {
-               if line.as_str() == String::from("yes") || 
-                line.as_str() == String::from("Yes") ||
-                line.as_str() == String::from("y"){
-                    rool = true;
-                    break
-               } else if line.as_str() == String::from("no") || 
-               line.as_str() == String::from("No") ||
-               line.as_str() == String::from("n"){
-                    rool = false;
-                    break
-               } else {
-                   println!("Please only what is specified");
-               }
-            },
-            Err(ReadlineError::Interrupted) => {
-                println!("Good bye!!");
-                process::exit(0x0100);
-            },
-            Err(ReadlineError::Eof) => {
-                println!("Good bye!!");
-                process::exit(0x0100);
-            },
-            Err(err) => {
-                println!("Error: {:?}", err);
-                process::exit(0x0100);
+        let solution = generate_random_digits();
+        println!("\nO.K. I have a number in mind.");
+        if guess(solution)? {
+            win_count += 1;
+            println!("You got it!!!");
+        } else {
+            println!(
+                "\nOh well\nThat's twenty guesses: My number was {}{}{}",
+                solution[0], solution[1], solution[2]
+            );
+        }
+        println!("\nPlay again (yes or no)?");
+        if read_lowercase_input()? != "yes" {
+            println!();
+            if win_count > 0 {
+                println!("A {win_count} point bagels buff!!");
             }
+            println!("Hope you had fun. Bye.");
+            return Ok(());
         }
     }
+}
 
-    if rool {
-        println!("\nI am thinking of a three-digit number.  Try to guess");
-        println!("my number and I will give you clues as follows:");
-        println!("   PICO   - One digit correct but in the wrong position");
-        println!("   FERMI  - One digit correct and in the right position");
-        println!("   BAGELS - No digits correct");
-    }    
+fn print_header() {
+    println!("                  Bagels");
+    println!("Creative-Computing  Morristown, New Jersey");
+    println!();
+    println!("Would you like the rules (yes or no)?");
+}
+
+fn print_rules() {
+    println!();
+    println!("I am thinking of a three-digit number. Try to guess");
+    println!("my number and I will give you clues as follows:");
+    println!("   Pico   - one digit correct but in the wrong position");
+    println!("   Fermi  - one digit correct and in the right position");
+    println!("   Bagles - no digits correct");
+}
+
+fn read_lowercase_input() -> io::Result<String> {
+    let mut input = String::new();
+    stdin().read_line(&mut input)?;
+    Ok(input.trim().to_lowercase())
+}
+
+fn generate_random_digits() -> Digits {
+    let range = 0..10;
+    let mut numbers = range.into_iter().collect::<Vec<u8>>();
+    numbers.shuffle(&mut rand::thread_rng());
+    let mut digits = Digits::default();
+    let len = digits.len();
+    digits.copy_from_slice(&numbers[..len]);
+    digits
+}
+
+fn guess(solution: Digits) -> io::Result<bool> {
+    for round in 1..21 {
+        let guess = read_valid_guess(round)?;
+        if guess == solution {
+            return Ok(true);
+        } else {
+            let mut pico = 0;
+            let mut fermi = 0;
+            for i in 0..guess.len() {
+                if guess[i] == solution[i] {
+                    fermi += 1;
+                } else if solution.contains(&guess[i]) {
+                    pico += 1;
+                }
+            }
+            let mut status = String::new();
+            if pico == 0 && fermi == 0 {
+                status += "Bagels";
+            } else {
+                for _ in 0..pico {
+                    status += "Pico ";
+                }
+                for _ in 0..fermi {
+                    status += "Fermi ";
+                }
+            };
+            println!("{}", status.trim_end());
+        }
+    }
+    Ok(false)
+}
+
+fn read_valid_guess(round: u8) -> io::Result<Digits> {
+    let mut guess = Digits::default();
+    loop {
+        let space = " ".repeat(if round < 10 { 5 } else { 4 });
+        print!("Guess #{round}{space}? ");
+        stdout().flush()?;
+        let input = read_lowercase_input()?;
+        if input.len() == guess.len() {
+            let mut i = 0;
+            for c in input.chars() {
+                if let Ok(digit) = c.to_string().parse::<u8>() {
+                    if guess[..i].contains(&digit) {
+                        println!("\nOh, I forgot to tell you that the number I have in mind\nhas no two digits the same.");
+                        break;
+                    }
+                    guess[i] = digit;
+                    i += 1;
+                    if i == guess.len() {
+                        return Ok(guess);
+                    }
+                } else {
+                    println!("What?");
+                    break;
+                }
+            }
+        } else {
+            println!("Try guessing a three-digit number.");
+        }
+    }
 }

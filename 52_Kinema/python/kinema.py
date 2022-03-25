@@ -20,7 +20,7 @@ g = 10
 EXPECTED_ACCURACY_PERCENT = 15
 
 
-def print_with_tab(spaces_count, msg):
+def print_with_tab(spaces_count, msg) -> None:
     if spaces_count > 0:
         spaces = " " * spaces_count
     else:
@@ -38,7 +38,7 @@ def do_quiz():
     print(f"A BALL IS THROWN UPWARDS AT {v0} METERS PER SECOND.")
     print()
 
-    answer = v0 ** 2 / (2 * g)
+    answer = v0**2 / (2 * g)
     num_questions_correct += ask_player("HOW HIGH WILL IT GO (IN METERS)?", answer)
 
     answer = 2 * v0 / g
@@ -74,7 +74,7 @@ def ask_player(question, answer):
     return score
 
 
-def main():
+def main() -> None:
     print_with_tab(33, "KINEMA")
     print_with_tab(15, "CREATIVE COMPUTING  MORRISTOWN, NEW JERSEY")
     print()

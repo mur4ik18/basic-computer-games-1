@@ -1,8 +1,9 @@
-import random
 import math
+import random
 import time
 
-def basic_print(*zones, **kwargs):
+
+def basic_print(*zones, **kwargs) -> None:
     """Simulates the PRINT command from BASIC to some degree.
     Supports `printing zones` if given multiple arguments."""
 
@@ -10,7 +11,7 @@ def basic_print(*zones, **kwargs):
     if len(zones) == 1:
         line = str(zones[0])
     else:
-        line = "".join(["{:<14}".format(str(zone)) for zone in zones])
+        line = "".join([f"{str(zone):<14}" for zone in zones])
     identation = kwargs.get("indent", 0)
     end = kwargs.get("end", "\n")
     print(" " * identation + line, end=end)
@@ -40,7 +41,7 @@ HORSE_NAMES = [
     "JOLLY",
     "HORSE",
     "JELLY DO NOT",
-    "MIDNIGHT"
+    "MIDNIGHT",
 ]
 
 
@@ -88,10 +89,10 @@ def setup_horses():
 
     # rounding odds to two decimals for nicer output,
     # this is not in the origin implementation
-    return [round(total/odd, 2) for odd in odds]
+    return [round(total / odd, 2) for odd in odds]
 
 
-def print_horse_odds(odds):
+def print_horse_odds(odds) -> None:
     """Print the odds for each horse"""
 
     basic_print("")
@@ -117,7 +118,7 @@ def get_bets(player_names):
                 basic_print("  YOU CAN'T DO THAT!")
                 amount = None
         bets.append((horse, amount))
-    
+
     basic_print("")
 
     return bets
@@ -127,7 +128,7 @@ def get_distance(odd):
     """Advances a horse during one step of the racing simulation.
     The amount travelled is random, but scaled by the odds of the horse"""
 
-    d = random.randrange(1,100)
+    d = random.randrange(1, 100)
     s = math.ceil(odd)
     if d < 10:
         return 1
@@ -139,15 +140,13 @@ def get_distance(odd):
         return 4
     elif d < s + 77:
         return 5
-    elif d < s + 77:
-        return 5
     elif d < s + 92:
         return 6
     else:
         return 7
 
 
-def print_race_state(total_distance, race_pos):
+def print_race_state(total_distance, race_pos) -> None:
     """Outputs the current state/stop of the race.
     Each horse is placed according to the distance they have travelled. In
     case some horses travelled the same distance, their numbers are printed
@@ -160,17 +159,17 @@ def print_race_state(total_distance, race_pos):
     # race_pos is stored by last to first horse in the race.
     # we get the next horse we need to print out
     next_pos = next(race_pos_iter)
-    
+
     # start line
     basic_print("XXXXSTARTXXXX")
 
     # print all 28 lines/unit of the race course
-    for l in range(28):
+    for line in range(28):
 
         # ensure we still have a horse to print and if so, check if the
         # next horse to print is not the current line
         # needs iteration, since multiple horses can share the same line
-        while next_pos is not None and l == total_distance[next_pos]:
+        while next_pos is not None and line == total_distance[next_pos]:
             basic_print(f"{next_pos} ", end="")
             next_pos = next(race_pos_iter, None)
         else:
@@ -195,7 +194,7 @@ def simulate_race(odds):
     # e.g. race_pos[0] => last horse
     #      race_pos[-1] => winning horse
     race_pos = list(range(num_horses))
-    
+
     basic_print("\n1 2 3 4 5 6 7 8")
 
     while True:
@@ -205,14 +204,14 @@ def simulate_race(odds):
             total_distance[i] += get_distance(odds[i])
 
         # bubble sort race_pos based on total distance travelled
-        # in the original implementation, race_pos is reset for each 
+        # in the original implementation, race_pos is reset for each
         # simulation step, so we keep this behaviour here
         race_pos = list(range(num_horses))
-        for l in range(num_horses):
-            for i in range(num_horses-1-l):
-                if total_distance[race_pos[i]] < total_distance[race_pos[i+1]]:
+        for line in range(num_horses):
+            for i in range(num_horses - 1 - line):
+                if total_distance[race_pos[i]] < total_distance[race_pos[i + 1]]:
                     continue
-                race_pos[i], race_pos[i+1] = race_pos[i+1], race_pos[i]
+                race_pos[i], race_pos[i + 1] = race_pos[i + 1], race_pos[i]
 
         # print current state of the race
         print_race_state(total_distance, race_pos)
@@ -221,23 +220,21 @@ def simulate_race(odds):
         # check if the winning horse is already over the finish line
         if total_distance[race_pos[-1]] >= 28:
             return race_pos
-        
+
         # this was not in the original BASIC implementation, but it makes the
         # race visualization a nice animation (if the terminal size is set to 31 rows)
         time.sleep(1)
 
 
-def print_race_results(race_positions, odds, bets, player_names):
+def print_race_results(race_positions, odds, bets, player_names) -> None:
     """Print the race results, as well as the winnings of each player"""
 
     # print the race positions first
     basic_print("THE RACE RESULTS ARE:")
-    position = 1
-    for horse_idx in reversed(race_positions):
+    for position, horse_idx in enumerate(reversed(race_positions), start=1):
         line = f"{position} PLACE HORSE NO. {horse_idx} AT {odds[horse_idx]}:1"
         basic_print("")
         basic_print(line)
-        position += 1
 
     # followed by the amount the players won
     winning_horse_idx = race_positions[-1]
@@ -246,9 +243,9 @@ def print_race_results(race_positions, odds, bets, player_names):
         if horse == winning_horse_idx:
             basic_print("")
             basic_print(f"{name} WINS ${amount * odds[winning_horse_idx]}")
-    
 
-def main_loop(player_names, horse_odds):
+
+def main_loop(player_names, horse_odds) -> None:
     """Main game loop"""
 
     while True:
@@ -263,7 +260,7 @@ def main_loop(player_names, horse_odds):
             break
 
 
-def main():
+def main() -> None:
     # introduction, player names and horse odds are only generated once
     introduction()
     player_names = setup_players()
@@ -272,7 +269,7 @@ def main():
     # main loop of the game, the player can play multiple races, with the
     # same odds
     main_loop(player_names, horse_odds)
-    
+
 
 if __name__ == "__main__":
     main()

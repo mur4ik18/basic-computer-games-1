@@ -1,5 +1,5 @@
-import re
 import random
+import re
 
 ###################
 #
@@ -20,21 +20,25 @@ BOARD_HEIGHT = 10
 #   length - number of "parts" on the ship that
 #            can be shot
 #   shots - number of shots the ship counts for
-SHIPS = [("BATTLESHIP", 5, 3),
-         ("CRUISER", 3, 2),
-         ("DESTROYER<A>", 2, 1),
-         ("DESTROYER<B>", 2, 1)]
+SHIPS = [
+    ("BATTLESHIP", 5, 3),
+    ("CRUISER", 3, 2),
+    ("DESTROYER<A>", 2, 1),
+    ("DESTROYER<B>", 2, 1),
+]
 
-VALID_MOVES = [[-1, 0],   # North
-               [-1, 1],   # North East
-               [0, 1],    # East
-               [1, 1],    # South East
-               [1, 0],    # South
-               [1, -1],   # South West
-               [0, -1],   # West
-               [-1, -1]]  # North West
+VALID_MOVES = [
+    [-1, 0],  # North
+    [-1, 1],  # North East
+    [0, 1],  # East
+    [1, 1],  # South East
+    [1, 0],  # South
+    [1, -1],  # South West
+    [0, -1],  # West
+    [-1, -1],
+]  # North West
 
-COORD_REGEX = '[ \t]{0,}(-?[0-9]{1,3})[ \t]{0,},[ \t]{0,}(-?[0-9]{1,2})'
+COORD_REGEX = "[ \t]{0,}(-?[0-9]{1,3})[ \t]{0,},[ \t]{0,}(-?[0-9]{1,2})"
 
 ####################
 #
@@ -50,11 +54,8 @@ computer_board = []
 # array representing the coordinates
 # for each ship for player and computer
 # array is in the same order as SHIPS
-player_ship_coords = []
 computer_ship_coords = []
 
-# keep track of the turn
-current_turn = 0
 
 ####################################
 #
@@ -112,8 +113,8 @@ random.seed()
 #   x: integer between 1 and BOARD_HEIGHT
 #   y: integer between 1 and BOARD WIDTH
 def random_x_y():
-    x = random.randrange(1, BOARD_WIDTH+1)
-    y = random.randrange(1, BOARD_HEIGHT+1)
+    x = random.randrange(1, BOARD_WIDTH + 1)
+    y = random.randrange(1, BOARD_HEIGHT + 1)
     return (x, y)
 
 
@@ -205,7 +206,7 @@ def generate_ship_coordinates(ship):
     coords = [(start_x, start_y)]
     x_coord = start_x
     y_coord = start_y
-    for i in range(ship_len):
+    for _ in range(ship_len):
         x_coord = x_coord + d_x
         y_coord = y_coord + d_y
         coords.append((x_coord, y_coord))
@@ -217,30 +218,29 @@ def generate_ship_coordinates(ship):
 # helper function to create a game board
 # that is blank
 def create_blank_board():
-    return [[None for y in range(BOARD_WIDTH)]
-            for x in range(BOARD_HEIGHT)]
+    return [[None for y in range(BOARD_WIDTH)] for x in range(BOARD_HEIGHT)]
 
 
 # print_board
 #
 # print out the game board for testing
 # purposes
-def print_board(board):
+def print_board(board) -> None:
 
     # print board header (column numbers)
-    print('  ', end='')
+    print("  ", end="")
     for z in range(BOARD_WIDTH):
-        print(f'{z+1:3}', end='')
-    print('')
+        print(f"{z+1:3}", end="")
+    print("")
 
     for x in range(len(board)):
-        print(f'{x+1:2}', end='')
+        print(f"{x+1:2}", end="")
         for y in range(len(board[x])):
-            if(board[x][y] is None):
-                print(f"{' ':3}", end='')
+            if board[x][y] is None:
+                print(f"{' ':3}", end="")
             else:
-                print(f"{board[x][y]:3}", end='')
-        print('')
+                print(f"{board[x][y]:3}", end="")
+        print("")
 
 
 # place_ship
@@ -256,7 +256,7 @@ def print_board(board):
 #         ship - integer repreesnting the type of ship (given in SHIPS)
 def place_ship(board, coords, ship):
     for coord in coords:
-        board[coord[0]-1][coord[1]-1] = ship
+        board[coord[0] - 1][coord[1] - 1] = ship
 
 
 # NOTE: A little quirk that exists here and in the orginal
@@ -274,7 +274,7 @@ def generate_board():
             coords = generate_ship_coordinates(ship)
             clear = True
             for coord in coords:
-                if board[coord[0]-1][coord[1]-1] is not None:
+                if board[coord[0] - 1][coord[1] - 1] is not None:
                     clear = False
                     break
             if clear:
@@ -284,20 +284,17 @@ def generate_board():
     return board, ship_coords
 
 
-# execute_shot
-#
-# given a board and x, y coordinates,
-# execute a shot. returns True if the shot
-# is valid, False if not
-def execute_shot(turn, board, x, y):
-
-    global current_turn
-    square = board[x-1][y-1]
+def execute_shot(turn, board, x, y, current_turn):
+    """
+    given a board and x, y coordinates,
+    execute a shot. returns True if the shot
+    is valid, False if not
+    """
+    square = board[x - 1][y - 1]
     ship_hit = -1
-    if square is not None:
-        if square >= 0 and square < len(SHIPS):
-            ship_hit = square
-    board[x-1][y-1] = 10 + current_turn
+    if square is not None and square >= 0 and square < len(SHIPS):
+        ship_hit = square
+    board[x - 1][y - 1] = 10 + current_turn
     return ship_hit
 
 
@@ -310,10 +307,9 @@ def calculate_shots(board):
     ships_found = [0 for x in range(len(SHIPS))]
     for x in range(BOARD_HEIGHT):
         for y in range(BOARD_WIDTH):
-            square = board[x-1][y-1]
-            if square is not None:
-                if square >= 0 and square < len(SHIPS):
-                    ships_found[square] = 1
+            square = board[x - 1][y - 1]
+            if square is not None and square >= 0 and square < len(SHIPS):
+                ships_found[square] = 1
     shots = 0
     for ship in range(len(ships_found)):
         if ships_found[ship] == 1:
@@ -340,12 +336,12 @@ def initialize_game():
     computer_board, computer_ship_coords = generate_board()
 
     # print out the title 'screen'
-    print('{0:>38}'.format("SALVO"))
-    print('{0:>57s}'.format("CREATIVE COMPUTING  MORRISTOWN, NEW JERSEY"))
-    print('')
-    print('{0:>52s}'.format("ORIGINAL BY LAWRENCE SIEGEL, 1973"))
-    print('{0:>56s}'.format("PYTHON 3 PORT BY TODD KAISER, MARCH 2021"))
-    print('\n')
+    print("{:>38}".format("SALVO"))
+    print("{:>57s}".format("CREATIVE COMPUTING  MORRISTOWN, NEW JERSEY"))
+    print("")
+    print("{:>52s}".format("ORIGINAL BY LAWRENCE SIEGEL, 1973"))
+    print("{:>56s}".format("PYTHON 3 PORT BY TODD KAISER, MARCH 2021"))
+    print("\n")
 
     # ask the player for ship coordinates
     print("ENTER COORDINATES FOR...")
@@ -353,7 +349,7 @@ def initialize_game():
     for ship in SHIPS:
         print(ship[0])
         list = []
-        for i in range(ship[1]):
+        for _ in range(ship[1]):
             x, y = input_coord()
             list.append((x, y))
         ship_coords.append(list)
@@ -376,7 +372,7 @@ def initialize_game():
                 for coord in coords:
                     x = coord[0]
                     y = coord[1]
-                    print('{0:2}'.format(x), '{0:2}'.format(y))
+                    print(f"{x:2}", f"{y:2}")
         else:
             input_loop = False
 
@@ -421,7 +417,7 @@ first_turn = PLAYER
 second_turn = COMPUTER
 
 
-def execute_turn(turn):
+def execute_turn(turn, current_turn):
 
     global num_computer_shots
     global num_player_shots
@@ -440,7 +436,7 @@ def execute_turn(turn):
         num_shots = num_player_shots
 
     shots = []
-    for shot in range(num_shots):
+    for _shot in range(num_shots):
         valid_shot = False
         x = -1
         y = -1
@@ -453,30 +449,27 @@ def execute_turn(turn):
                 x, y = random_x_y()
             else:
                 x, y = input_coord()
-            square = board[x-1][y-1]
-            if square is not None:
-                if square > 10:
-                    if turn == PLAYER:
-                        print("YOU SHOT THERE BEFORE ON TURN", square - 10)
-                    continue
+            square = board[x - 1][y - 1]
+            if square is not None and square > 10:
+                if turn == PLAYER:
+                    print("YOU SHOT THERE BEFORE ON TURN", square - 10)
+                continue
             shots.append((x, y))
             valid_shot = True
 
     hits = []
     for shot in shots:
-        hit = execute_shot(turn, board, shot[0], shot[1])
+        hit = execute_shot(turn, board, shot[0], shot[1], current_turn)
         if hit >= 0:
             hits.append(hit)
-        if turn == COMPUTER:
-            if print_computer_shots:
-                print(shot[0], shot[1])
+        if turn == COMPUTER and print_computer_shots:
+            print(shot[0], shot[1])
 
     for hit in hits:
         if turn == COMPUTER:
             print("I HIT YOUR", SHIPS[hit][0])
         else:
             print("YOU HIT MY", SHIPS[hit][0])
-
 
     if turn == COMPUTER:
         num_player_shots = calculate_shots(board)
@@ -491,36 +484,39 @@ def execute_turn(turn):
 #
 ######################################
 
-######################
-#
-# main game flow
-#
-######################
 
-# initialize the player and computer
-# boards
-initialize_game()
+def main() -> None:
+    # keep track of the turn
+    current_turn = 0
 
-# execute turns until someone wins or we run
-# out of squares to shoot
+    # initialize the player and computer
+    # boards
+    initialize_game()
 
-game_over = False
-while not game_over:
+    # execute turns until someone wins or we run
+    # out of squares to shoot
 
-    # increment the turn
-    current_turn = current_turn + 1
+    game_over = False
+    while not game_over:
 
-    print("\n")
-    print("TURN", current_turn)
+        # increment the turn
+        current_turn = current_turn + 1
 
-    # print("computer")
-    # print_board(computer_board)
-    # print("player")
-    # print_board(player_board)
+        print("\n")
+        print("TURN", current_turn)
 
-    if execute_turn(first_turn) == 0:
-        game_over = True
-        continue
-    if execute_turn(second_turn) == 0:
-        game_over = True
-        continue
+        # print("computer")
+        # print_board(computer_board)
+        # print("player")
+        # print_board(player_board)
+
+        if execute_turn(first_turn, current_turn) == 0:
+            game_over = True
+            continue
+        if execute_turn(second_turn, current_turn) == 0:
+            game_over = True
+            continue
+
+
+if __name__ == "__main__":
+    main()
