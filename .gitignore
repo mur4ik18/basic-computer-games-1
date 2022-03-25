@@ -26,8 +26,10 @@ obj/
 out/
 
 *.py[co]
-
+.python-version
 Pipfile
+venv/
+.coverage
 
 .DS_Store
 .vs/
@@ -35,3 +37,4 @@ Pipfile
 Cargo.lock
 **/*.rs.bk
 /target
+todo.md

@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import random
 from functools import partial
+from typing import Callable, List, Set
 
-def display_intro():
+
+def display_intro() -> None:
     print("" * 33 + "BOMBARDMENT")
     print("" * 15 + " CREATIVE COMPUTING  MORRISTOWN, NEW JERSEY")
     print("\n\n")
@@ -22,47 +24,46 @@ def display_intro():
     print("\n" * 4)
 
 
-def display_field():
+def display_field() -> None:
     for row in range(5):
         initial = row * 5 + 1
-        print('\t'.join([str(initial + column) for column in range(5)]))
+        print("\t".join([str(initial + column) for column in range(5)]))
 
     print("\n" * 9)
 
 
-def positions_list():
+def positions_list() -> List[int]:
     return list(range(1, 26, 1))
 
 
-def generate_enemy_positions():
-    """ Randomly choose 4 'positions' out of a range of 1 to 25 """
+def generate_enemy_positions() -> Set[int]:
+    """Randomly choose 4 'positions' out of a range of 1 to 25"""
     positions = positions_list()
     random.shuffle(positions)
     return set(positions[:4])
 
 
-def is_valid_position(pos):
+def is_valid_position(pos: int) -> bool:
     return pos in positions_list()
 
 
-def prompt_for_player_positions():
-
+def prompt_for_player_positions() -> Set[int]:
     while True:
         raw_positions = input("WHAT ARE YOUR FOUR POSITIONS? ")
-        positions = set(int(pos) for pos in raw_positions.split())
+        positions = {int(pos) for pos in raw_positions.split()}
         # Verify user inputs (for example, if the player gives a
         # a position for 26, the enemy can never hit it)
-        if (len(positions) != 4):
+        if len(positions) != 4:
             print("PLEASE ENTER 4 UNIQUE POSITIONS\n")
             continue
-        elif (any(not is_valid_position(pos) for pos in positions)):
+        elif any(not is_valid_position(pos) for pos in positions):
             print("ALL POSITIONS MUST RANGE (1-25)\n")
             continue
         else:
             return positions
 
 
-def prompt_player_for_target():
+def prompt_player_for_target() -> int:
 
     while True:
         target = int(input("WHERE DO YOU WISH TO FIRE YOUR MISSLE? "))
@@ -73,8 +74,14 @@ def prompt_player_for_target():
         return target
 
 
-def attack(target, positions, hit_message, miss_message, progress_messages):
-    """ Performs attack procedure returning True if we are to continue. """
+def attack(
+    target: int,
+    positions: Set[int],
+    hit_message: str,
+    miss_message: str,
+    progress_messages: str,
+) -> bool:
+    """Performs attack procedure returning True if we are to continue."""
 
     if target in positions:
         print(hit_message.format(target))
@@ -86,16 +93,19 @@ def attack(target, positions, hit_message, miss_message, progress_messages):
     return len(positions) > 0
 
 
-def init_enemy():
-    """ Returns a closure analogous to prompt_player_for_target. Will
-        choose from a unique sequence of positions to avoid picking the
-        same position twice. """
+def init_enemy() -> Callable[[], int]:
+    """
+    Return a closure analogous to prompt_player_for_target.
+
+    Will choose from a unique sequence of positions to avoid picking the
+    same position twice.
+    """
 
     position_sequence = positions_list()
     random.shuffle(position_sequence)
     position = iter(position_sequence)
 
-    def choose():
+    def choose() -> int:
         return next(position)
 
     return choose
@@ -103,24 +113,22 @@ def init_enemy():
 
 # Messages correspond to outposts remaining (3, 2, 1, 0)
 PLAYER_PROGRESS_MESSAGES = (
-    "YOU GOT ME, I'M GOING FAST. BUT I'LL GET YOU WHEN\n"
-    "MY TRANSISTO&S RECUP%RA*E!",
+    "YOU GOT ME, I'M GOING FAST. BUT I'LL GET YOU WHEN\nMY TRANSISTO&S RECUP%RA*E!",
     "THREE DOWN, ONE TO GO.\n\n",
     "TWO DOWN, TWO TO GO.\n\n",
-    "ONE DOWN, THREE TO GO.\n\n"
-    )
+    "ONE DOWN, THREE TO GO.\n\n",
+)
 
 
 ENEMY_PROGRESS_MESSAGES = (
-    "YOU'RE DEAD. YOUR LAST OUTPOST WAS AT {}. HA, HA, HA.\n"
-    "BETTER LUCK NEXT TIME.",
+    "YOU'RE DEAD. YOUR LAST OUTPOST WAS AT {}. HA, HA, HA.\nBETTER LUCK NEXT TIME.",
     "YOU HAVE ONLY ONE OUTPOST LEFT.\n\n",
     "YOU HAVE ONLY TWO OUTPOSTS LEFT.\n\n",
     "YOU HAVE ONLY THREE OUTPOSTS LEFT.\n\n",
-    )
+)
 
 
-def play():
+def play() -> None:
     display_intro()
     display_field()
 
@@ -128,22 +136,28 @@ def play():
     player_positions = prompt_for_player_positions()
 
     # Build partial functions only requiring the target as input
-    player_attacks = partial(attack,
-                             positions=enemy_positions,
-                             hit_message="YOU GOT ONE OF MY OUTPOSTS!",
-                             miss_message="HA, HA YOU MISSED. MY TURN NOW:\n\n",
-                             progress_messages=PLAYER_PROGRESS_MESSAGES)
+    player_attacks = partial(
+        attack,
+        positions=enemy_positions,
+        hit_message="YOU GOT ONE OF MY OUTPOSTS!",
+        miss_message="HA, HA YOU MISSED. MY TURN NOW:\n\n",
+        progress_messages=PLAYER_PROGRESS_MESSAGES,
+    )
 
-    enemy_attacks = partial(attack,
-                            positions=player_positions,
-                            hit_message="I GOT YOU. IT WON'T BE LONG NOW. POST {} WAS HIT.",
-                            miss_message="I MISSED YOU, YOU DIRTY RAT. I PICKED {}. YOUR TURN:\n\n",
-                            progress_messages=ENEMY_PROGRESS_MESSAGES)
+    enemy_attacks = partial(
+        attack,
+        positions=player_positions,
+        hit_message="I GOT YOU. IT WON'T BE LONG NOW. POST {} WAS HIT.",
+        miss_message="I MISSED YOU, YOU DIRTY RAT. I PICKED {}. YOUR TURN:\n\n",
+        progress_messages=ENEMY_PROGRESS_MESSAGES,
+    )
 
     enemy_position_choice = init_enemy()
 
     # Play as long as both player_attacks and enemy_attacks allow to continue
-    while player_attacks(prompt_player_for_target()) and enemy_attacks(enemy_position_choice()):
+    while player_attacks(prompt_player_for_target()) and enemy_attacks(
+        enemy_position_choice()
+    ):
         pass
 
 

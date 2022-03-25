@@ -27,3 +27,21 @@ As published in Basic Computer Games (1978):
 
 Downloaded from Vintage Basic at
 http://www.vintage-basic.net/games.html
+
+#### Porting Notes
+
+in [#613](https://github.com/coding-horror/basic-computer-games/pull/613)
+
+`1060 IF B1<>B OR W1<>W THEN I(X)=0`
+
+was changed to:
+
+`1060 IF B1>B OR W1>W THEN I(X)=0`
+
+This was done because of a bug:
+
+Originally, after guessing and getting feedback, the computer would look through every possible combination, and for all that haven't previously been marked as impossible it would check whether or not the black and white pins that that combination should get are not-equal to what its previous guess got and, if they are equal, the combination would be marked as possible, and if they aren't equal then the combination would be marked as impossible. This results in a bug where the computer eliminates the correct answer as a possible solution after the first guess, unless the first guess just happens to be correct.
+
+this was discussed in more detail in [issue #611](https://github.com/coding-horror/basic-computer-games/issues/611)
+
+additionally, it's recommended that you have the computer elimate it's previous guess as possible unless that guess was correct. (the rust port does this)

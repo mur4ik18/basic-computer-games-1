@@ -14,3 +14,9 @@ As published in Basic Computer Games (1978):
 
 Downloaded from Vintage Basic at
 http://www.vintage-basic.net/games.html
+
+#### Porting Notes
+
+In the original version, the data pointer doesn't reset after a race is completed. This causes subsequent races to error at some future point at line 540,
+
+    540    READ Q
